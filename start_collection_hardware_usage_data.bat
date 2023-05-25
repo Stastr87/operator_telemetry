@@ -1,0 +1,1 @@
+D:\Heavy_load_tests\operator_telemetry\venv\Scripts\python.exe D:\Heavy_load_tests\operator_telemetry\collect_hardware_statistic.py localhost "Ethernet 4"

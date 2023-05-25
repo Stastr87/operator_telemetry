@@ -1,2 +1,3 @@
-/.vs
-/telemetry
+telemetry/
+__pycache__/
+.vs/

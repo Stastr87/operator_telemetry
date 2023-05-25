@@ -1,0 +1,1 @@
+D:\Heavy_load_tests\operator_telemetry\venv\Scripts\python.exe D:\Heavy_load_tests\operator_telemetry\get_record_statistic_by_channell.py localhost 25-05-2023
