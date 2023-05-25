@@ -24,31 +24,8 @@ else:
 import logging
 logging.basicConfig(level=logging.INFO, format = '%(asctime)s - %(levelname)s %(message)s')
 
-def authorization(host):
-    ## Метод интеграции на сервере
+from auth import Auth
 
-    method='/v1/authorization/login'
-    url = f'http://{host}:8090{method}'
-    ## Заголовок для отправки в формате json
-    headers = {'Content-type': 'application/json',  
-               'Accept': 'text/plain',
-               'Content-Encoding': 'utf-8'
-               }
-    ## Данные тела запроса
-    data ={"login": 'admin',
-           "password": 'admin',
-           "encryptionType": "None"
-          }
-    ## Формирование запроса
-    response=requests.post(url, headers=headers, data = json.dumps(data))    ## Присвоил переменной данные ответа сервера объект JSON
-    try:    ## Пытаемся перехватить ошибку если вместо json объектра сервер ответил кодом 200, но не вернул json объект 
-        responseData = response.json()    ## Присвоил переменной данные ответа сервера объект JSON
-    except:    ## Если возникает какая либо ошибка переменная принимает значение заглушки в JSON
-        responseData={"accessToken": "None",
-                      "currentServer": "Some Error with JSON object"}
-    server_guid = responseData['currentServer'] ## Получаем GUID сервера
-    token = responseData['accessToken']    ## Готовая конструкция для дальнейшего использования токена
-    return token
 
 def get_channel_recordings(host, token):
     #/v1/channel/recordings
@@ -227,14 +204,13 @@ def update_data_frame_v2(host,token,channel_guid,fail_status,file_path):
 
 
 
-def check_channel_recordings_v3(host):
+def check_channel_recordings_v3(host,token):
     while True:
         #Проверка на доступность папки для хранения телеметрии
         _,db_file_path_v1,_=is_db_file_exist_v1(host)
         _,db_file_path_v2,_=is_db_file_exist_v2(host)
         
         #Получить данные о статусах записи каналов сервера
-        token=authorization(host)
         data_info=get_channel_recordings(host, token)
         data_info=json.loads(data_info)
         
@@ -273,9 +249,19 @@ def check_channel_recordings_v3(host):
 
 if __name__ == '__main__':
     _,host=argv
+    with open('config.json') as config:
+        data=config.read()
+
+        json_data=json.loads(data)
+
+        login=json_data["operator_login"]
+        password=json_data["operator_password"]
+    authorization=Auth(host,login,password)
+    token=authorization.token
+
     while True:
         try:
-            check_channel_recordings_v3(host)
+            check_channel_recordings_v3(host, token)
         except KeyboardInterrupt:    #Без этой строчки код будет выполняться бесконечно при любом количестве ошибок
             logging.info(f' Завершение работы: KeyboardInterrupt')
             is_running=False
