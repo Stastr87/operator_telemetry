@@ -1,6 +1,7 @@
-## Скрипт сбора информации о длительности ошибки записи по каждому каналу и количестве каналов со сбоями
-## Пример запуска "py <имя файла>.py <IP адрес>
-## <IP адрес> - адрес наблюдаемого сервера, он же имя папки в которой сохраняется БД (По умолчанию ".\telemetry\192.168.11.109")
+'''Скрипт сбора информации о длительности ошибки записи по каждому каналу и количестве каналов со сбоями
+Пример запуска "py <имя файла>.py <IP адрес>
+<IP адрес> - адрес наблюдаемого сервера, он же имя папки в которой сохраняется БД (По умолчанию ".\telemetry\192.168.11.109")
+'''
 
 import time
 import sys
@@ -15,17 +16,11 @@ import os
 import requests
 import pandas as pd
 from datetime import datetime
-
-if sys.platform=='linux':
-    pass #import getch
-else:
-    import msvcrt
+from auth import Auth
+import msvcrt
 
 import logging
 logging.basicConfig(level=logging.INFO, format = '%(asctime)s - %(levelname)s %(message)s')
-
-from auth import Auth
-
 
 def get_channel_recordings(host, token):
     #/v1/channel/recordings
@@ -68,9 +63,10 @@ def get_device_name(host,token,channel_guid):
     payload =json.dumps(channel_guid)
     ## Формирование запроса
     response=requests.post(url, headers=headers, data = payload)
-    try:    ## Пытаемся перехватить ошибку если вместо json объектра сервер ответил кодом 200, но не вернул json объект 
+    try:    
+        ## Пытаемся перехватить ошибку если вместо json объектра сервер ответил кодом 200, но не вернул json объект 
         responseData = response.json()    ## Присвоил переменной данные ответа сервера объект JSON
-        logging.info(f'channel {responseData["coupledDevice"]["ip"]}. responseData["coupledDevice"]["ip"]=="0.0.0.0": {responseData["coupledDevice"]["ip"]=="0.0.0.0"}')
+        logging.debug(f'{__name__} -> get_device_name() -> channel {responseData["coupledDevice"]["ip"]}. responseData["coupledDevice"]["ip"]=="0.0.0.0": {responseData["coupledDevice"]["ip"]=="0.0.0.0"}')
         if responseData["coupledDevice"]["ip"]=="0.0.0.0":
             channell_name=f'{responseData["coupledDevice"]["name"]} {responseData["name"]}'
         else:
@@ -175,11 +171,15 @@ def update_data_frame_v2(host,token,channel_guid,fail_status,file_path):
     current_time=get_current_time()
     with shelve.open(file_path) as shelve_file:
         dataFrame=shelve_file["channel_record_statistic_v2"]
-    logging.info(f'channel {channel_guid} fail_status: {fail_status}')
+    device_name=get_device_name(host,token,channel_guid)
+    
     #Если получен статус ошибки записи то запишем данные в БД timestamp
     
     if fail_status==True:
-          
+        # Подсчет длительности ошибки записи требует доработки
+        # Суммарная длительность расчитывается неаправильно в случае если ошибка
+        # возникает периодически
+        logging.debug(f'{__name__}-> update_data_frame_v2() -> {device_name} fail_status: {fail_status}')
         if channel_guid in dataFrame.index:
             last_error_timestamp=dataFrame.loc[channel_guid, 'last_error_timestamp']
             new_error_duration=current_time-last_error_timestamp
@@ -251,9 +251,7 @@ if __name__ == '__main__':
     _,host=argv
     with open('config.json') as config:
         data=config.read()
-
         json_data=json.loads(data)
-
         login=json_data["operator_login"]
         password=json_data["operator_password"]
     authorization=Auth(host,login,password)
