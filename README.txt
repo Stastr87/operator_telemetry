@@ -2,7 +2,7 @@
 в файле \venv\pyvenv.cfg
 
 collect_hardware_statistic.py-логирование телеметрии локальных ресурсов ПК. Работает на windows и Linux(Ubuntu)
-        * Нагрузка ЦП
+    * Нагрузка ЦП
 	* %Сводобной памяти
 	* Сетевая нагрузка Upload/Download
 Требования: Python>=3.9

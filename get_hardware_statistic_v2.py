@@ -39,18 +39,32 @@ y_net_up=np.array(y_net_up, dtype=float)
 print("Построение графиков cpu_usage, ram_free и network_usage")
 
 fig=plt.figure(figsize=(10,6) )
+logging.info(f'date_label: {date}')
 fig.suptitle(f'Ресурсы сервера {ip}\n за {date}')
 plt.subplot(311)
 
-#Набор инструкций для графиков "download" в случае пересечения
-plt.fill_between(x,y_net_down,y_net_up, where=(y_net_down>y_net_up), interpolate=True, label='download',color = (0.3,0.62,0.83,1),alpha = 0.9)
-plt.fill_between(x,y_net_down,0,  where=(y_net_down<=5*y_net_up), interpolate=True,color = (0.3,0.62,0.83,1),alpha = 0.9)
-plt.fill_between(x,y_net_down,0,  where=(y_net_down==y_net_up), interpolate=True,color = (0.3,0.62,0.83,1),alpha = 0.9)
 
 #Набор инструкций для графиков "upload" в случае пересечения 
-plt.fill_between(x,y_net_up,y_net_down, where=(y_net_up>y_net_down), interpolate=True, label='upload',color = (0.95,0.6,0.6,1),alpha = 0.9)
-plt.fill_between(x,y_net_up,0, where=(y_net_up<=2*y_net_down), interpolate=True,color = (0.95,0.6,0.6,1),alpha = 0.9)
-plt.fill_between(x,y_net_up,0, where=(y_net_up==y_net_down), interpolate=True,color = (0.95,0.6,0.6,1),alpha = 0.9)
+#plt.fill_between(x,y_net_up,y_net_down, where=(y_net_up>y_net_down), interpolate=True, label='upload',color = (0.95,0.6,0.6,1),alpha = 0.9)
+plt.fill_between(x,y_net_up,y_net_down, where=None, interpolate=True, label='upload',color = (0.95,0.6,0.6,1),alpha = 0.5)
+#plt.fill_between(x,y_net_up,0, where=(y_net_up<=2*y_net_down), interpolate=True,color = (0.95,0.6,0.6,1),alpha = 0.9)
+plt.fill_between(x,y_net_up,0, where=(None), interpolate=True,color = (0.95,0.6,0.6,1),alpha = 0.5)
+#plt.fill_between(x,y_net_up,0, where=(y_net_up==y_net_down), interpolate=True,color = (0.95,0.6,0.6,1),alpha = 0.9)
+plt.fill_between(x,y_net_up,0, where=None, interpolate=True,color = (0.95,0.6,0.6,1),alpha = 0.5)
+plt.plot(x,y_net_up,linewidth=1,color = (0.8,0.6,0.6,1))
+
+#Набор инструкций для графиков "download" в случае пересечения
+plt.fill_between(x,y_net_down,y_net_up, where=(y_net_down>y_net_up), interpolate=True, label='download',color = (0.3,0.62,0.83,1),alpha = 0.5)
+#plt.fill_between(x,y_net_down,y_net_up, where=None, interpolate=True, label='download',color = (0.3,0.62,0.83,1),alpha = 0.1)
+plt.fill_between(x,y_net_down,0, where=(y_net_down<=1.61*y_net_up), interpolate=True,color = (0.3,0.62,0.83,1),alpha = 0.5)
+#plt.fill_between(x,y_net_down,0, where=None, interpolate=True,color = (0.3,0.62,0.83,1),alpha = 0.1)
+plt.fill_between(x,y_net_down,0, where=(y_net_down==y_net_up), interpolate=True,color = (0.3,0.62,0.83,1),alpha = 0.5)
+#plt.fill_between(x,y_net_down,0, where=None, interpolate=True,color = (0.3,0.62,0.83,1),alpha = 0.1)
+plt.plot(x,y_net_down,linewidth=1,color = (0.2,0.62,0.83,1))
+
+
+
+
 
 
 plt.legend(loc='upper left')
@@ -61,12 +75,14 @@ plt.ylim(0)
 
 plt.subplot(312)
 plt.fill_between(x,y_cpu,alpha = 0.5)
+plt.plot(x,y_cpu,linewidth=1,color = (0.2,0.62,0.83,1))
 plt.grid(True)
 plt.ylim(0,100)
 plt.ylabel('cpu, %')
 
 plt.subplot(313)
 plt.fill_between(x,y_ram,alpha = 0.5)
+plt.plot(x,y_ram,linewidth=1,color = (0.2,0.62,0.83,1))
 plt.grid(True)
 plt.ylim(0,100)
 plt.ylabel('ram_free, %')

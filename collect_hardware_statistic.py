@@ -25,7 +25,13 @@ else:
     import msvcrt
 
 import logging
-logging.basicConfig(level=logging.INFO, format = '%(asctime)s - %(levelname)s %(message)s')
+logging.basicConfig(level=logging.INFO, format = '%(asctime)s - %(levelname)s %(message)s',filename="log/hardware_statistic.log",filemode="a")
+
+def get_config():
+    with open('config.json', 'r',encoding="utf-8") as config:
+        config = config.read()
+        config = json.loads(config)
+    return config
 
 def get_hardware_stat(net_name):
     inteval=5                                                #Интервал проверки
@@ -121,8 +127,13 @@ def check_harware_info(host,net_name):
         _,db_file_path,_=is_db_file_exist(host)
         current_cpu_usage, current_ram_free, network_usage_down,network_usage_up=get_hardware_stat(net_name)
         current_time=get_current_time()
+        print(f'localhost: cpu(%) -> {round(current_cpu_usage,2)}, ram_free(%) -> {round(current_ram_free,2)}, network_usage(Kbyte/sec) UP/DOWN -> {round(network_usage_up/1000)} / {round(network_usage_down/1000)}')
         logging.info(f'localhost: cpu(%) -> {round(current_cpu_usage,2)}, ram_free(%) -> {round(current_ram_free,2)}, network_usage(Kbyte/sec) UP/DOWN -> {round(network_usage_up/1000)} / {round(network_usage_down/1000)}')
-        update_data_frame(current_time, current_cpu_usage, current_ram_free,network_usage_down,network_usage_up,db_file_path)
+        try:
+            update_data_frame(current_time, current_cpu_usage, current_ram_free,network_usage_down,network_usage_up,db_file_path)
+        except:
+            logging.error('Ошибка обновления данных во временном файле', exc_info=True)
+            print('Ошибка обновления данных во временном файле')
         if sys.platform!='linux':
             check_exit_button()
         else:
@@ -133,17 +144,26 @@ def check_harware_info(host,net_name):
 # ------исполняемый код скрипта-------
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('folder',help='folder - имя папки для хранения данных телеметрии, для удобстава рекомендуется задать имя эквивалентное IP адресу сервера с которого будет сохраняться данные телеметрии.') 
-    parser.add_argument('net_name',help='net_name - имя сетевого интерфейса сервера для которого требуется сохранить телеметрию.') 
-    args = parser.parse_args()
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument('folder',help='folder - имя папки для хранения данных телеметрии, для удобстава рекомендуется задать имя эквивалентное IP адресу сервера с которого будет сохраняться данные телеметрии.') 
+        parser.add_argument('net_name',help='net_name - имя сетевого интерфейса сервера для которого требуется сохранить телеметрию.') 
+        args = parser.parse_args()
+        folder,net_name=args.folder,args.net_name
+
+    except:
+        logging.info('Try to read config file...')
+        print('Try to read config file...')
+        config = get_config()
+        folder,net_name = config['server_host'], config['network']
+
     while True:
         try:
-            check_harware_info(args.folder,args.net_name)
+            check_harware_info(folder,net_name)
         except KeyboardInterrupt:    #Без этой строчки код будет выполняться бесконечно при любом количестве ошибок
-            logging.info(f' Завершение работы: KeyboardInterrupt')
+            print(f' Завершение работы: KeyboardInterrupt')
             is_running=False
             sys.exit(0)
         except Exception as e:
-            logging.info(f'ERROR: {e}')
-            time.sleep(1)    #Перезапуск процесса скрипта спустя n сек
+            logging.error(f'ERROR: {e}')
+            time.sleep(5)    #Перезапуск процесса скрипта спустя n сек

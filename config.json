@@ -1,2 +1,2 @@
-{"operator_login":"admin",
- "operator_password":"admin"}
+{"server_host" : "localhost",
+ "network" : "Ethernet 3"}
